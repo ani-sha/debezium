@@ -254,4 +254,17 @@ public class ConfigurationTest {
         config = Configuration.create().with(MSG_KEY_COLUMNS, "t1,t2").build();
         assertThat(config.validate(Field.setOf(MSG_KEY_COLUMNS)).get(MSG_KEY_COLUMNS.name()).errorMessages()).isNotEmpty();
     }
+
+    @Test
+    @FixFor("DBZ-2957")
+    public void testMsgKeyColumnsFieldRegexValidation() {
+        config = Configuration.create().with(MSG_KEY_COLUMNS, "t1:C1;(.*).t2:C1,C2;").build();
+        assertThat(config.validate(Field.setOf(MSG_KEY_COLUMNS)).get(MSG_KEY_COLUMNS.name()).errorMessages()).isEmpty();
+        // field : invalid format
+        config = Configuration.create().with(MSG_KEY_COLUMNS, "t1:C1;(.*).t2:C1,C2;t3.C1;").build();
+        assertThat(config.validate(Field.setOf(MSG_KEY_COLUMNS)).get(MSG_KEY_COLUMNS.name()).errorMessages()).isNotEmpty();
+        // field : invalid format
+        config = Configuration.create().with(MSG_KEY_COLUMNS, "t1:C1;(.*).t2:C1,C2;t3").build();
+        assertThat(config.validate(Field.setOf(MSG_KEY_COLUMNS)).get(MSG_KEY_COLUMNS.name()).errorMessages()).isNotEmpty();
+    }
 }

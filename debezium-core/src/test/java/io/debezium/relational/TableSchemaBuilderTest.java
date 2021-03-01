@@ -343,6 +343,18 @@ public class TableSchemaBuilderTest {
     }
 
     @Test
+    @FixFor("DBZ-2957")
+    public void shouldBuildTableSchemaFromTableWithCustomKeyWithRegexValidation() {
+        table = table.edit().setPrimaryKeyNames().create();
+        schema = new TableSchemaBuilder(new JdbcValueConverters(), adjuster, customConverterRegistry, SchemaBuilder.struct().build(), false)
+                .create(prefix, "sometopic", table, null, null, CustomKeyMapper.getInstance("(.*).table:C2,C3;", null));
+        Schema keys = schema.keySchema();
+        assertThat(keys.fields()).hasSize(2);
+        assertThat(keys.field("C2").name()).isEqualTo("C2");
+        assertThat(keys.field("C3").name()).isEqualTo("C3");
+    }
+
+    @Test
     @FixFor("DBZ-1015")
     public void shouldBuildTableSchemaFromTableWithCustomKey() {
         table = table.edit().setPrimaryKeyNames().create();
