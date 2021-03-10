@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.ConfigDef.Importance;
@@ -36,6 +37,7 @@ public class MongoDbConnectorConfig extends CommonConnectorConfig {
 
     protected static final String COLLECTION_INCLUDE_LIST_ALREADY_SPECIFIED_ERROR_MSG = "\"collection.include.list\" or \"collection.whitelist\" is already specified";
     protected static final String DATABASE_INCLUDE_LIST_ALREADY_SPECIFIED_ERROR_MSG = "\"database.include.list\" or \"database.whitelist\" is already specified";
+    protected static final Pattern FIELD_EXCLUDE_LIST_PATTERN = Pattern.compile("^[\\w.+*,\\s]+$");
 
     /**
      * The set of predefined SnapshotMode options or aliases.
@@ -356,6 +358,7 @@ public class MongoDbConnectorConfig extends CommonConnectorConfig {
             .withDisplayName("Exclude Fields")
             .withType(Type.STRING)
             .withWidth(Width.LONG)
+            .withValidation(Field::isListOfRegex, MongoDbConnectorConfig::validateFieldExcludeList)
             .withImportance(Importance.MEDIUM)
             .withDescription("A comma-separated list of the fully-qualified names of fields that should be excluded from change event message values");
 
@@ -368,6 +371,7 @@ public class MongoDbConnectorConfig extends CommonConnectorConfig {
             .withType(Type.STRING)
             .withWidth(Width.LONG)
             .withImportance(Importance.LOW)
+            .withValidation(Field::isListOfRegex, MongoDbConnectorConfig::validateFieldExcludeList)
             .withInvisibleRecommender()
             .withDescription("A comma-separated list of the fully-qualified names of fields that should be excluded from change event message values (deprecated, use \""
                     + FIELD_EXCLUDE_LIST.name() + "\" instead)");
@@ -523,6 +527,16 @@ public class MongoDbConnectorConfig extends CommonConnectorConfig {
         String excludeList = config.getFallbackStringProperty(DATABASE_EXCLUDE_LIST, DATABASE_BLACKLIST);
         if (includeList != null && excludeList != null) {
             problems.accept(DATABASE_EXCLUDE_LIST, excludeList, DATABASE_INCLUDE_LIST_ALREADY_SPECIFIED_ERROR_MSG);
+            return 1;
+        }
+        return 0;
+    }
+
+    private static int validateFieldExcludeList(Configuration config, Field field, ValidationOutput problems) {
+        String fieldExcludeList = config.getString(FIELD_EXCLUDE_LIST);
+        if (fieldExcludeList != null && !FIELD_EXCLUDE_LIST_PATTERN.asPredicate().test(fieldExcludeList)) {
+            problems.accept(FIELD_EXCLUDE_LIST, fieldExcludeList,
+                    FIELD_EXCLUDE_LIST.name() + " has an invalid format (expecting '" + FIELD_EXCLUDE_LIST_PATTERN.pattern() + "')");
             return 1;
         }
         return 0;
