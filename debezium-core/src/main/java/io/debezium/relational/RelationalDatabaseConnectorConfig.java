@@ -48,7 +48,8 @@ public abstract class RelationalDatabaseConnectorConfig extends CommonConnectorC
     protected static final String TABLE_EXCLUDE_LIST_NAME = "table.exclude.list";
     protected static final String TABLE_WHITELIST_NAME = "table.whitelist";
     protected static final String TABLE_INCLUDE_LIST_NAME = "table.include.list";
-    private static final Pattern MSG_KEY_COLUMNS_PATTERN = Pattern.compile("^(([^:]+):([^:;\\s]+))");
+    private static final Pattern MSG_KEY_COLUMNS_PATTERN = Pattern.compile("^(([^:;]+):([^:;\\s]+))+$");
+    private static final Pattern COLUMN_SPLIT = Pattern.compile(";");
     public static final long DEFAULT_SNAPSHOT_LOCK_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(10);
     public static final String TABLE_INCLUDE_LIST_ALREADY_SPECIFIED_ERROR_MSG = "\"table.include.list\" or \"table.whitelist\" is already specified";
     public static final String COLUMN_INCLUDE_LIST_ALREADY_SPECIFIED_ERROR_MSG = "\"column.include.list\" or \"column.whitelist\" is already specified";
@@ -713,10 +714,7 @@ public abstract class RelationalDatabaseConnectorConfig extends CommonConnectorC
     private static int validateMessageKeyColumnsField(Configuration config, Field field, Field.ValidationOutput problems) {
         String msgKeyColumns = config.getString(MSG_KEY_COLUMNS);
         if (msgKeyColumns != null) {
-            if (msgKeyColumns.contains(";")) {
-                msgKeyColumns = msgKeyColumns.replaceAll(";+$", "");
-            }
-            for (String substring : msgKeyColumns.split(";")) {
+            for (String substring : COLUMN_SPLIT.split(msgKeyColumns)) {
                 if (!MSG_KEY_COLUMNS_PATTERN.asPredicate().test(substring)) {
                     problems.accept(MSG_KEY_COLUMNS, substring, substring + " has an invalid format (expecting '" + MSG_KEY_COLUMNS_PATTERN.pattern() + "')");
                     return 1;

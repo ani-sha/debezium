@@ -103,7 +103,7 @@ public class Key {
                 return null;
             }
 
-            fullyQualifiedColumnNames = fullyQualifiedColumnNames.replaceAll(";+$", "");
+            // fullyQualifiedColumnNames = fullyQualifiedColumnNames.replaceAll(";+$", "");
 
             // transform the 'message.key.columns' option into a list of regexp.
             // ex: message.key.columns=inventory.customers:pk1,pk2;(.*).purchaseorders:pk3,pk4
