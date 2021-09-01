@@ -1,3 +1,5 @@
+# Octocat commits check action
+
 name: Octocat commits check
 on: [ pull_request_target ]
 
