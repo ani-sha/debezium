@@ -1,0 +1,29 @@
+name: Octocat commits check
+on: [ pull_request_target ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout action
+        uses: actions/checkout@v2
+      - name: Check if octocat commits are present?
+        id: commit
+        env:
+          pull_request_number: ${{ github.event.pull_request.number }}
+        run: |
+          curl --silent -X "GET" https://api.github.com/repos/debezium/debezium/pulls/$pull_request_number/commits | jq '.[] | {author: .author.login}' | jq -r '.author' >> SORTED_AUTHORS.txt
+
+          while IFS=" " read -r AUTHOR;
+          do
+            if [[ $AUTHOR == *"null"* ]]; then
+              echo "::set-output name=OCTOCAT_COMMIT_FOUND::true"
+            fi
+          done < SORTED_AUTHORS.txt
+      - name: Create comment
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            Hi @${{ github.event.pull_request.author.login }}. Thank you for your valuable contribution.
+            Please author your commit using an email linked to your GitHub account.
