@@ -12,7 +12,7 @@
     <artifactId>debezium-build-parent</artifactId>
     <version>1.7.0-SNAPSHOT</version>
     <name>Debezium Build Aggregator</name>
-    <description>Debezium is an open source change data capture</description>
+    <description>Debezium is an open source change data capture sys</description>
     <packaging>pom</packaging>
     <url>https://debezium.io</url>
 
