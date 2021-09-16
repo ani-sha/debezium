@@ -16,7 +16,7 @@ jobs:
         env:
           pull_request_number: ${{ github.event.pull_request.number }}
         run: |
-          PREFIX_CHECK=$(curl --silent -X "GET" https://api.github.com/repos/debezium/debezium/pulls/$pull_request_number | jq -r '.title' | grep -o -E -i '(^DBZ-[[:digit:]]+)|(\[release\])|(\[jenkins-jobs\])|(\[docs\])')
+          PREFIX_CHECK=$(curl --silent -X "GET" https://api.github.com/repos/ani-sha/debezium/pulls/$pull_request_number | jq -r '.title' | grep -o -E -i '(^DBZ-[[:digit:]]+)|(\[release\])|(\[jenkins-jobs\])|(\[docs\])')
           if [[ $PREFIX_CHECK == "" ]]; then
             echo "::set-output name=PREFIX::false"
           fi
