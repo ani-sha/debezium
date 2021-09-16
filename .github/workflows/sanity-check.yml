@@ -16,12 +16,9 @@ jobs:
         env:
           pull_request_number: ${{ github.event.pull_request.number }}
         run: |
-          PREFIX_CHECK=$(curl --silent -X "GET" https://api.github.com/repos/debezium/debezium/pulls/2522 | jq -r '.title' | grep -o -E -i '(^DBZ-[[:digit:]]+)|(\[release\])|(\[jenkins-jobs\])|(\[docs\])')
-          if [[ $PREFIX_CHECK == "" ]]; then
-            echo "::set-output name=PREFIX::false"
-          fi
+          curl --silent -X "GET" https://api.github.com/repos/debezium/debezium/pulls/2612 | jq -r '.title' | grep -o -E -i '(^DBZ-[[:digit:]]+)|(\[release\])|(\[jenkins-jobs\])|(\[docs\])'
       - name: Create Comment
-        if: ${{ steps.message.outputs.PREFIX == 'false' }}
+        if: ${{ failure() }}
         uses: peter-evans/create-or-update-comment@v1
         with:
           issue-number: ${{ github.event.pull_request.number }}
