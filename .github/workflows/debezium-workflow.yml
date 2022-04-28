@@ -799,7 +799,7 @@ jobs:
             maven-debezium-test-build-${{ hashFiles('core/**/pom.xml') }}
       - name: Build Debezium UI
         run: >
-          ./mvnw clean install -am -pl debezium-ui/backend -B
+          ./mvnw clean install -f debezium-ui/backend/pom.xml -am -pl
           -Ddebezium.test.records.waittime=20
           -Dformat.formatter.goal=validate
           -Dformat.imports.goal=check -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
