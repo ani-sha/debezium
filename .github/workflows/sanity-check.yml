@@ -37,7 +37,7 @@ jobs:
             echo -e "$NON_PREFIX_COMMITS"
             echo "PREFIX_COMMITS=false" >> $GITHUB_OUTPUT
           fi
-      - name: Create Comment
+      - name: Create Comment Check
         if: ${{ steps.check.outputs.PREFIX_COMMITS == 'false' }}
         uses: peter-evans/create-or-update-comment@v1
         with:
