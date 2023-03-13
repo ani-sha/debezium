@@ -40,24 +40,25 @@ jobs:
   check:
     runs-on: ubuntu-latest
     outputs:
-      SKIP_CHECK: ${{ steps.check.outputs.SKIP_CHECK }}
+      SKIP_CHECK: ${{ steps.skip.outputs.SKIP_CHECK }}
     steps:
       - name: Checkout Action
         uses: actions/checkout@v3
 
       - name: Check if author has Quay.io credentials
+        id: skip
         env:
           QUAY_IO_USERNAME: ${{ secrets.QUAY_IO_USERNAME }}
           QUAY_IO_PASSWORD: ${{ secrets.QUAY_IO_PASSWORD }}
         run: |
-          if [[ $QUAY_IO_USERNAME != '' && $QUAY_IO_PASSWORD != '' ]]; then
-            echo "SKIP_CHECK=false" >> $GITHUB_OUTPUT
+          if [[ $QUAY_IO_USERNAME == '' && $QUAY_IO_PASSWORD == '' ]]; then
+            echo "SKIP_CHECK=true" >> $GITHUB_OUTPUT
+            echo $GITHUB_OUTPUT $SKIP_CHECK
           fi
 
   build:
     runs-on: ubuntu-latest
-    needs: [check]
-    if: ${{ needs.check.outputs.SKIP_CHECK == 'false' || github.event_name == 'push' }}
+    if: ${{ needs.check.outputs.SKIP_CHECK != 'true' }}
     steps:
       - name: Checkout Action
         uses: actions/checkout@v3
