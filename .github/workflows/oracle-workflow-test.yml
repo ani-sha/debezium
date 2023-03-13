@@ -52,7 +52,7 @@ jobs:
           QUAY_IO_PASSWORD: ${{ secrets.QUAY_IO_PASSWORD }}
         run: |
           if [[ $QUAY_IO_USERNAME == '' && $QUAY_IO_PASSWORD == '' ]]; then
-            echo $GITHUB_OUTPUT $SKIP_CHECK
+           echo "SKIP_CHECK=true" >> $GITHUB_OUTPUT
           fi
 
   build:
