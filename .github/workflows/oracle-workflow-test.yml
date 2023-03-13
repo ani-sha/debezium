@@ -52,13 +52,12 @@ jobs:
           QUAY_IO_PASSWORD: ${{ secrets.QUAY_IO_PASSWORD }}
         run: |
           if [[ $QUAY_IO_USERNAME == '' && $QUAY_IO_PASSWORD == '' ]]; then
-            echo "SKIP_CHECK=true" >> $GITHUB_OUTPUT
             echo $GITHUB_OUTPUT $SKIP_CHECK
           fi
 
   build:
     runs-on: ubuntu-latest
-    if: ${{ needs.check.outputs.SKIP_CHECK != 'true' }}
+    if: ${{ needs.check.outputs.SKIP_CHECK != 'true' || contains(fromJSON('["push", "pull_request"]'), github.event_name) }}
     steps:
       - name: Checkout Action
         uses: actions/checkout@v3
