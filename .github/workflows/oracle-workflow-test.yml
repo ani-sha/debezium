@@ -1,4 +1,4 @@
-name: Build and Test Oracle Connector [TEST rev 1]
+name: Build and Test Oracle Connector [TEST rev 2]
 
 on:
   push:
