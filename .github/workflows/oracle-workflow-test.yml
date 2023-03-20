@@ -10,7 +10,6 @@ on:
       - 'support/checkstyle/**'
       - 'debezium-api/**'
       - 'debezium-ddl-parser/**'
-      - 'debezium-assembly-descriptors/**'
       - 'debezium-core/**'
       - 'debezium-embedded/**'
       - 'debezium-connector-oracle/**'
