@@ -26,7 +26,6 @@ on:
       - 'support/checkstyle/**'
       - 'debezium-api/**'
       - 'debezium-ddl-parser/**'
-      - 'debezium-assembly-descriptors/**'
       - 'debezium-core/**'
       - 'debezium-connector-oracle/**'
       - 'debezium-parent/pom.xml'
