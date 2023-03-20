@@ -52,8 +52,11 @@ jobs:
           QUAY_IO_USERNAME: ${{ secrets.QUAY_IO_USERNAME }}
           QUAY_IO_PASSWORD: ${{ secrets.QUAY_IO_PASSWORD }}
         run: |
-          if [[ $QUAY_IO_USERNAME == '' && $QUAY_IO_PASSWORD == '' ]]; then
-           echo "SKIP_CHECK=true" >> $GITHUB_OUTPUT
+          if [ $QUAY_IO_USERNAME == '' && $QUAY_IO_PASSWORD == '' ]; then
+            echo "No credentials found!"
+            echo "SKIP_CHECK=true" >> $GITHUB_OUTPUT
+          else
+            echo "Found some credentials!"
           fi
       - name: Check failure
         if: ${{ steps.check.outputs.SKIP_CHECK == 'true' }}
@@ -65,6 +68,7 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    needs: [check]
     steps:
       - name: Checkout Action
         uses: actions/checkout@v3
