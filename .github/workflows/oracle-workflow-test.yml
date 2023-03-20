@@ -39,6 +39,7 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' }}
     outputs:
       SKIP_CHECK: ${{ steps.skip.outputs.SKIP_CHECK }}
     steps:
@@ -54,10 +55,16 @@ jobs:
           if [[ $QUAY_IO_USERNAME == '' && $QUAY_IO_PASSWORD == '' ]]; then
            echo "SKIP_CHECK=true" >> $GITHUB_OUTPUT
           fi
+      - name: Check failure
+        if: ${{ steps.check.outputs.SKIP_CHECK == 'true' }}
+        uses: actions/github-script@v6
+        continue-on-error: false
+        with:
+          script: |
+            throw new Error("Author @${{ github.event.pull_request.user.login }} doesn't have credentials to run the workflow. Denied access.")
 
   build:
     runs-on: ubuntu-latest
-    if: ${{ needs.check.outputs.SKIP_CHECK != 'true' || contains(fromJSON('["push", "pull_request"]'), github.event_name) }}
     steps:
       - name: Checkout Action
         uses: actions/checkout@v3
