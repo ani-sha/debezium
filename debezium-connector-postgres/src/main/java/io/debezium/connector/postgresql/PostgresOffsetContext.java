@@ -44,11 +44,11 @@ public class PostgresOffsetContext extends CommonOffsetContext<SourceInfo> {
     private final TransactionContext transactionContext;
     private final IncrementalSnapshotContext<TableId> incrementalSnapshotContext;
 
-    private PostgresOffsetContext(PostgresConnectorConfig connectorConfig, Lsn lsn, Lsn lastCompletelyProcessedLsn, Lsn lastCommitLsn, Long txId, Operation messageType,
-                                  Instant time,
-                                  boolean snapshot,
-                                  boolean lastSnapshotRecord, TransactionContext transactionContext,
-                                  IncrementalSnapshotContext<TableId> incrementalSnapshotContext) {
+    protected PostgresOffsetContext(PostgresConnectorConfig connectorConfig, Lsn lsn, Lsn lastCompletelyProcessedLsn, Lsn lastCommitLsn, Long txId, Operation messageType,
+                                    Instant time,
+                                    boolean snapshot,
+                                    boolean lastSnapshotRecord, TransactionContext transactionContext,
+                                    IncrementalSnapshotContext<TableId> incrementalSnapshotContext) {
         super(new SourceInfo(connectorConfig));
 
         this.lastCompletelyProcessedLsn = lastCompletelyProcessedLsn;

@@ -12,6 +12,7 @@ import io.debezium.connector.postgresql.connection.ReplicationConnection;
 import io.debezium.connector.postgresql.spi.SlotCreationResult;
 import io.debezium.connector.postgresql.spi.SlotState;
 import io.debezium.jdbc.MainConnectionProvidingConnectionFactory;
+import io.debezium.pipeline.CommonChangeOffsetHandler;
 import io.debezium.pipeline.ErrorHandler;
 import io.debezium.pipeline.notification.NotificationService;
 import io.debezium.pipeline.source.snapshot.incremental.IncrementalSnapshotChangeEventSource;
@@ -122,5 +123,10 @@ public class PostgresChangeEventSourceFactory implements ChangeEventSourceFactor
                 snapshotProgressListener,
                 dataChangeEventListener,
                 notificationService));
+    }
+
+    @Override
+    public CommonChangeOffsetHandler<PostgresOffsetContext> getChangeOffsetHandler() {
+        return new PostgresChangeOffsetHandler(configuration);
     }
 }

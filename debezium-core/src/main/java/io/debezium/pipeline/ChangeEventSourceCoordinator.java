@@ -79,6 +79,7 @@ public class ChangeEventSourceCoordinator<P extends Partition, O extends OffsetC
     protected final SnapshotterService snapshotterService;
     protected final ExecutorService executor;
     private final ExecutorService blockingSnapshotExecutor;
+    private final ExecutorService changeOffsetExecutor;
     protected final EventDispatcher<P, ?> eventDispatcher;
     protected final DatabaseSchema<?> schema;
     protected final SignalProcessor<P, O> signalProcessor;
@@ -111,6 +112,7 @@ public class ChangeEventSourceCoordinator<P extends Partition, O extends OffsetC
         this.snapshotterService = snapshotterService;
         this.executor = Threads.newSingleThreadExecutor(connectorType, connectorConfig.getLogicalName(), "change-event-source-coordinator");
         this.blockingSnapshotExecutor = Threads.newSingleThreadExecutor(connectorType, connectorConfig.getLogicalName(), "blocking-snapshot");
+        this.changeOffsetExecutor = Threads.newSingleThreadExecutor(connectorType, connectorConfig.getLogicalName(), "change-offset");
         this.eventDispatcher = eventDispatcher;
         this.schema = schema;
         this.signalProcessor = signalProcessor;
@@ -291,6 +293,42 @@ public class ChangeEventSourceCoordinator<P extends Partition, O extends OffsetC
         return snapshotResult;
     }
 
+    public void doChangeOffset(P partition, OffsetContext offset, Map<String, ?> data) {
+        changeOffsetExecutor.submit(() -> {
+            previousLogContext.set(taskContext.configureLoggingContext("streaming", partition));
+
+            paused = true;
+            streaming = true;
+
+            try {
+                context.waitStreamingPaused();
+                previousLogContext.set(taskContext.configureLoggingContext("change-offset"));
+
+                LOGGER.info("Starting change offset");
+                CommonChangeOffsetHandler<O> changeOffsetHandler = changeEventSourceFactory.getChangeOffsetHandler();
+
+                String error = changeOffsetHandler.validate(data);
+                if (error != null) {
+                    errorHandler.setProducerThrowable(new Throwable(error));
+                    return;
+                }
+
+                O offsetContext = changeOffsetHandler.load(data);
+                commitOffset(partition.getSourcePartition(), offsetContext.getOffset());
+
+                if (running) { // add commit offset condition
+                    previousLogContext.set(taskContext.configureLoggingContext("streaming", partition));
+                    paused = false;
+                    context.resumeStreaming();
+                }
+            }
+            catch (InterruptedException e) {
+                throw new DebeziumException("Change offset has been interrupted: {}", e);
+            }
+        });
+
+    }
+
     protected CatchUpStreamingResult executeCatchUpStreaming(ChangeEventSourceContext context,
                                                              SnapshotChangeEventSource<P, O> snapshotSource,
                                                              P partition, O previousOffset)
@@ -347,6 +385,7 @@ public class ChangeEventSourceCoordinator<P extends Partition, O extends OffsetC
             blockingSnapshotExecutor.shutdown();
             boolean isShutdown = executor.awaitTermination(SHUTDOWN_WAIT_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
             boolean isBlockingSnapshotShutdown = blockingSnapshotExecutor.awaitTermination(SHUTDOWN_WAIT_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+            boolean isChangeOffsetShutdown = changeOffsetExecutor.awaitTermination(SHUTDOWN_WAIT_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
 
             if (!isShutdown) {
                 LOGGER.warn("Coordinator didn't stop in the expected time, shutting down executor now");
@@ -364,6 +403,15 @@ public class ChangeEventSourceCoordinator<P extends Partition, O extends OffsetC
                 Thread.interrupted();
                 blockingSnapshotExecutor.shutdownNow();
                 blockingSnapshotExecutor.awaitTermination(SHUTDOWN_WAIT_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+            }
+
+            if (!isChangeOffsetShutdown) {
+                LOGGER.warn("Coordinator didn't stop in the expected time, shutting down change offset executor now");
+
+                // Clear interrupt flag so the forced termination is always attempted
+                Thread.interrupted();
+                changeOffsetExecutor.shutdownNow();
+                changeOffsetExecutor.awaitTermination(SHUTDOWN_WAIT_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
             }
 
             Optional<SignalProcessor<P, O>> processor = getSignalProcessor(previousOffsets);

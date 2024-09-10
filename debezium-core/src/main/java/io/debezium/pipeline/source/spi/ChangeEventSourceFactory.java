@@ -7,6 +7,7 @@ package io.debezium.pipeline.source.spi;
 
 import java.util.Optional;
 
+import io.debezium.pipeline.CommonChangeOffsetHandler;
 import io.debezium.pipeline.notification.NotificationService;
 import io.debezium.pipeline.source.snapshot.incremental.IncrementalSnapshotChangeEventSource;
 import io.debezium.pipeline.spi.OffsetContext;
@@ -56,4 +57,6 @@ public interface ChangeEventSourceFactory<P extends Partition, O extends OffsetC
                                                                                                                                   NotificationService<P, O> notificationService) {
         return Optional.empty();
     }
+
+    CommonChangeOffsetHandler<O> getChangeOffsetHandler();
 }

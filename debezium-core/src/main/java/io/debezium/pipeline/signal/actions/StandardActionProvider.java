@@ -10,6 +10,7 @@ import java.util.Map;
 import io.debezium.config.CommonConnectorConfig;
 import io.debezium.pipeline.ChangeEventSourceCoordinator;
 import io.debezium.pipeline.EventDispatcher;
+import io.debezium.pipeline.signal.actions.offset.ChangeOffset;
 import io.debezium.pipeline.signal.actions.snapshotting.CloseIncrementalSnapshotWindow;
 import io.debezium.pipeline.signal.actions.snapshotting.ExecuteSnapshot;
 import io.debezium.pipeline.signal.actions.snapshotting.OpenIncrementalSnapshotWindow;
@@ -32,6 +33,7 @@ public class StandardActionProvider implements SignalActionProvider {
                 OpenIncrementalSnapshotWindow.NAME, new OpenIncrementalSnapshotWindow<>(),
                 CloseIncrementalSnapshotWindow.NAME, new CloseIncrementalSnapshotWindow<>(dispatcher),
                 PauseIncrementalSnapshot.NAME, new PauseIncrementalSnapshot<>(dispatcher),
-                ResumeIncrementalSnapshot.NAME, new ResumeIncrementalSnapshot<>(dispatcher));
+                ResumeIncrementalSnapshot.NAME, new ResumeIncrementalSnapshot<>(dispatcher),
+                ChangeOffset.NAME, new ChangeOffset<>(dispatcher, changeEventSourceCoordinator));
     }
 }
