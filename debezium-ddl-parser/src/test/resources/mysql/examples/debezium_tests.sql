@@ -53,6 +53,7 @@ GET STACKED DIAGNOSTICS CONDITION 1 errno = MYSQL_ERRNO, msg = MESSAGE_TEXT;
 GET CURRENT DIAGNOSTICS errcount = NUMBER;
 
 -- create table
+--CREATE TABLE `user_account` ( `id1` bigint(20) unsigned NOT NULL DEFAULT nextval(`useraccount`.`user_account_id_seq`));
 create table table_with_keyword_as_column_name (geometry int, national int);
 create table transactional_table(name varchar(255), class_id int, id int) transactional=1;
 create table transactional(name varchar(255), class_id int, id int);
@@ -74,6 +75,17 @@ ENGINE=INNODB AUTO_INCREMENT=1979503 DEFAULT CHARSET=UTF8MB4 COLLATE=UTF8MB4_GEN
 
 -- create database
 create database db_with_character_set_eq character set = DEFAULT;
+
+-- create procedure
+#begin
+CREATE PROCEDURE TEST_UPDATE()
+BEGIN
+    UPDATE TEST_AUTO_INC AI
+        JOIN TEST_JOIN_LIMIT JL ON JL.ID = AI.ID
+    SET AI.COL_1 = NULL
+    LIMIT 500;
+END
+#end
 
 -- select statement
 SELECT mod(3,2);
