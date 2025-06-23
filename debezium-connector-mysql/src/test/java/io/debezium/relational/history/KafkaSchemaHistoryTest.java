@@ -11,7 +11,7 @@ import io.debezium.connector.mysql.MySqlOffsetContext;
 import io.debezium.connector.mysql.MySqlPartition;
 import io.debezium.connector.mysql.MySqlReadOnlyIncrementalSnapshotContext;
 import io.debezium.connector.mysql.SourceInfo;
-import io.debezium.connector.mysql.antlr.MySqlAntlrDdlParser;
+import io.debezium.connector.mysql.antlr.legacy.MySqlAntlrDdlParser;
 import io.debezium.pipeline.txmetadata.TransactionContext;
 import io.debezium.relational.ddl.DdlParser;
 

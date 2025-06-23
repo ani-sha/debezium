@@ -12,7 +12,7 @@ import io.debezium.config.CommonConnectorConfig.EventConvertingFailureHandlingMo
 import io.debezium.connector.binlog.BinlogConnectorConfig;
 import io.debezium.connector.binlog.BinlogValueConvertersTest;
 import io.debezium.connector.binlog.jdbc.BinlogValueConverters;
-import io.debezium.connector.mysql.antlr.MySqlAntlrDdlParser;
+import io.debezium.connector.mysql.antlr.legacy.MySqlAntlrDdlParser;
 import io.debezium.connector.mysql.util.MySqlValueConvertersFactory;
 import io.debezium.jdbc.JdbcValueConverters;
 import io.debezium.jdbc.TemporalPrecisionMode;

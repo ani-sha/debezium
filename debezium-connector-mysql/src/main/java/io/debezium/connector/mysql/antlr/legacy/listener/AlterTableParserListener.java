@@ -4,7 +4,7 @@
  * Licensed under the Apache Software License version 2.0, available at http://www.apache.org/licenses/LICENSE-2.0
  */
 
-package io.debezium.connector.mysql.antlr.listener;
+package io.debezium.connector.mysql.antlr.legacy.listener;
 
 import static io.debezium.antlr.AntlrDdlParser.getText;
 
@@ -16,7 +16,7 @@ import org.antlr.v4.runtime.tree.ParseTreeListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.debezium.connector.mysql.antlr.MySqlAntlrDdlParser;
+import io.debezium.connector.mysql.antlr.legacy.MySqlAntlrDdlParser;
 import io.debezium.ddl.parser.mysql.generated.MySqlParser;
 import io.debezium.relational.Column;
 import io.debezium.relational.ColumnEditor;

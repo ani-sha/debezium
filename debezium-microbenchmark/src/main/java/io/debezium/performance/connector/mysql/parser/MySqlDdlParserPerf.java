@@ -20,7 +20,7 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
 
-import io.debezium.connector.mysql.antlr.MySqlAntlrDdlParser;
+import io.debezium.connector.mysql.antlr.legacy.MySqlAntlrDdlParser;
 import io.debezium.relational.Tables;
 import io.debezium.relational.ddl.AbstractDdlParser;
 

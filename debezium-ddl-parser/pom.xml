@@ -100,13 +100,29 @@
                         </dependencies>
                         <executions>
                             <execution>
-                                <id>MySql</id>
+                                <id>MySql Legacy</id>
                                 <configuration>
                                     <verbose>false</verbose>
                                     <showTree>false</showTree>
                                     <entryPoint>root</entryPoint>
                                     <grammarName>MySql</grammarName>
                                     <packageName>io.debezium.ddl.parser.mysql.generated</packageName>
+                                    <caseInsensitiveType>UPPER</caseInsensitiveType>
+                                    <exampleFiles>src/test/resources/mysql/examples</exampleFiles>
+                                    <enabled>${antlr.tests.enabled}</enabled>
+                                </configuration>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>MySql Oracle</id>
+                                <configuration>
+                                    <verbose>false</verbose>
+                                    <showTree>false</showTree>
+                                    <entryPoint>root</entryPoint>
+                                    <grammarName>MySql</grammarName>
+                                    <packageName>io.debezium.ddl.parser.mysql2.generated</packageName>
                                     <caseInsensitiveType>UPPER</caseInsensitiveType>
                                     <exampleFiles>src/test/resources/mysql/examples</exampleFiles>
                                     <enabled>${antlr.tests.enabled}</enabled>

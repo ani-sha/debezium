@@ -6,7 +6,7 @@
 package io.debezium.relational.history;
 
 import io.debezium.connector.mysql.MySqlConnector;
-import io.debezium.connector.mysql.antlr.MySqlAntlrDdlParser;
+import io.debezium.connector.mysql.antlr.legacy.MySqlAntlrDdlParser;
 import io.debezium.relational.ddl.DdlParser;
 
 /**

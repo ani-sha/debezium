@@ -4,35 +4,33 @@
  * Licensed under the Apache Software License version 2.0, available at http://www.apache.org/licenses/LICENSE-2.0
  */
 
-package io.debezium.connector.mysql.antlr.listener;
-
-import io.debezium.antlr.AntlrDdlParserListener;
-import io.debezium.antlr.ProxyParseTreeListenerUtil;
-import io.debezium.connector.mysql.antlr.MySqlAntlrDdlParser;
-import io.debezium.ddl.parser.mysql2.generated.MySQLParser;
-import io.debezium.ddl.parser.mysql2.generated.MySQLParserBaseListener;
-import io.debezium.text.ParsingException;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.ErrorNode;
-import org.antlr.v4.runtime.tree.ParseTreeListener;
-import org.antlr.v4.runtime.tree.TerminalNode;
+package io.debezium.connector.mysql.antlr.legacy.listener;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.ErrorNode;
+import org.antlr.v4.runtime.tree.ParseTreeListener;
+import org.antlr.v4.runtime.tree.TerminalNode;
+
+import io.debezium.antlr.AntlrDdlParserListener;
+import io.debezium.antlr.ProxyParseTreeListenerUtil;
+import io.debezium.connector.mysql.antlr.legacy.MySqlAntlrDdlParser;
+import io.debezium.ddl.parser.mysql.generated.MySqlParser;
+import io.debezium.ddl.parser.mysql.generated.MySqlParserBaseListener;
+import io.debezium.text.ParsingException;
+
 /**
  * Parser listener for MySQL column definition queries. Its purpose is to delegate events
- * to a defined collection of concrete parser listeners. Each listener handles the specified type of DDL statement.
+ * to defined collection of concrete parser listeners. Each listener handles the specified type of DDL statement.
  * <p>
  * This listener is catching all occurred parsing exceptions and implements a skipping logic for BEGIN ... END
- * statements. No event will be delegated during the skipping phase.
- *
- * @author Anisha Mohanty
+ * statements. No event will be delegated during skipping phase.
  */
-
-public class MySqlAntlrDdlParserListener extends MySQLParserBaseListener implements AntlrDdlParserListener {
+public class MySqlAntlrDdlParserListener extends MySqlParserBaseListener implements AntlrDdlParserListener {
 
     /**
      * Collection of listeners for delegation of events.
@@ -45,20 +43,31 @@ public class MySqlAntlrDdlParserListener extends MySQLParserBaseListener impleme
     private boolean skipNodes;
 
     /**
-     * Count of skipped nodes. Each entered event during skipping phase will increase the counter
-     * and each exit event will decrease it. When the counter is decreased to 0, the skipping phase will end.
+     * Count of skipped nodes. Each enter event during skipping phase will increase the counter
+     * and each exit event will decrease it. When counter will be decreased to 0, the skipping phase will end.
      */
     private int skippedNodesCount = 0;
 
     /**
-     * Collection of caught exceptions.
+     * Collection of catched exceptions.
      */
     private final Collection<ParsingException> errors = new ArrayList<>();
 
     public MySqlAntlrDdlParserListener(MySqlAntlrDdlParser parser) {
         // initialize listeners
+        listeners.add(new CreateAndAlterDatabaseParserListener(parser));
+        listeners.add(new DropDatabaseParserListener(parser));
+        listeners.add(new CreateTableParserListener(parser, listeners));
+        listeners.add(new AlterTableParserListener(parser, listeners));
+        listeners.add(new DropTableParserListener(parser));
+        listeners.add(new RenameTableParserListener(parser));
+        listeners.add(new TruncateTableParserListener(parser));
+        listeners.add(new CreateViewParserListener(parser, listeners));
+        listeners.add(new AlterViewParserListener(parser, listeners));
+        listeners.add(new DropViewParserListener(parser));
+        listeners.add(new CreateUniqueIndexParserListener(parser));
+        listeners.add(new SetStatementParserListener(parser));
         listeners.add(new UseStatementParserListener(parser));
-
     }
 
     /**
@@ -89,7 +98,7 @@ public class MySqlAntlrDdlParserListener extends MySQLParserBaseListener impleme
                 skipNodes = false;
             }
             else {
-                // going up in a tree means decreasing the number of skipped nodes
+                // going up in a tree, means decreasing a number of skipped nodes
                 skippedNodesCount--;
             }
         }
@@ -108,9 +117,9 @@ public class MySqlAntlrDdlParserListener extends MySQLParserBaseListener impleme
         ProxyParseTreeListenerUtil.visitTerminal(node, listeners, errors);
     }
 
-
-    public void enterRoutineBody(MySQLParser.StoredRoutineBodyContext ctx) {
-        // This is a grammar rule for BEGIN ... END part of statements. Skip it.
+    @Override
+    public void enterRoutineBody(MySqlParser.RoutineBodyContext ctx) {
+        // this is a grammar rule for BEGIN ... END part of statements. Skip it.
         skipNodes = true;
     }
 }

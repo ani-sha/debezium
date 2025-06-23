@@ -6,63 +6,50 @@
 
 package io.debezium.connector.mysql.antlr;
 
-import java.sql.Types;
-import java.util.Arrays;
+import io.debezium.annotation.VisibleForTesting;
+import io.debezium.antlr.AntlrDdlParser;
+import io.debezium.antlr.AntlrDdlParserListener;
+import io.debezium.antlr.DataTypeResolver;
+import io.debezium.connector.binlog.charset.BinlogCharsetRegistry;
+import io.debezium.connector.binlog.jdbc.BinlogSystemVariables;
+import io.debezium.connector.mysql.antlr.listener.MySqlAntlrDdlParserListener;
+import io.debezium.ddl.parser.mysql2.generated.MySQLLexer;
+import io.debezium.ddl.parser.mysql2.generated.MySQLParser;
+import io.debezium.relational.*;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.misc.Interval;
+import org.antlr.v4.runtime.tree.ParseTree;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.misc.Interval;
-import org.antlr.v4.runtime.tree.ParseTree;
-
-import io.debezium.annotation.VisibleForTesting;
-import io.debezium.antlr.AntlrDdlParser;
-import io.debezium.antlr.AntlrDdlParserListener;
-import io.debezium.antlr.DataTypeResolver;
-import io.debezium.antlr.DataTypeResolver.DataTypeEntry;
-import io.debezium.connector.binlog.charset.BinlogCharsetRegistry;
-import io.debezium.connector.binlog.jdbc.BinlogSystemVariables;
-import io.debezium.connector.mysql.antlr.listener.MySqlAntlrDdlParserListener;
-import io.debezium.ddl.parser.mysql.generated.MySqlLexer;
-import io.debezium.ddl.parser.mysql.generated.MySqlParser;
-import io.debezium.ddl.parser.mysql.generated.MySqlParser.CharsetNameContext;
-import io.debezium.ddl.parser.mysql.generated.MySqlParser.CollationNameContext;
-import io.debezium.ddl.parser.mysql.generated.MySqlParser.RenameTableClauseContext;
-import io.debezium.ddl.parser.mysql.generated.MySqlParser.RenameTableContext;
-import io.debezium.relational.Column;
-import io.debezium.relational.ColumnEditor;
-import io.debezium.relational.SystemVariables;
-import io.debezium.relational.TableEditor;
-import io.debezium.relational.TableId;
-import io.debezium.relational.Tables.TableFilter;
-
 /**
  * An ANTLR based parser for MySQL DDL statements.
  *
- * @author Roman Kuchár <kucharrom@gmail.com>.
+ * @author Anisha Mohanty
  */
-public class MySqlAntlrDdlParser extends AntlrDdlParser<MySqlLexer, MySqlParser> {
+public class MySqlAntlrDdlParser extends AntlrDdlParser<MySQLLexer, MySQLParser> {
 
     private final ConcurrentMap<String, String> charsetNameForDatabase = new ConcurrentHashMap<>();
-    private final TableFilter tableFilter;
+    private final Tables.TableFilter tableFilter;
     private final BinlogCharsetRegistry charsetRegistry;
 
     @VisibleForTesting
     public MySqlAntlrDdlParser() {
-        this(TableFilter.includeAll());
+        this(Tables.TableFilter.includeAll());
     }
 
     @VisibleForTesting
-    public MySqlAntlrDdlParser(TableFilter tableFilter) {
+    public MySqlAntlrDdlParser(Tables.TableFilter tableFilter) {
         this(true, false, false, tableFilter, null);
     }
 
     public MySqlAntlrDdlParser(boolean throwErrorsFromTreeWalk, boolean includeViews, boolean includeComments,
-                               TableFilter tableFilter, BinlogCharsetRegistry charsetRegistry) {
+                               Tables.TableFilter tableFilter, BinlogCharsetRegistry charsetRegistry) {
         super(throwErrorsFromTreeWalk, includeViews, includeComments);
         systemVariables = new BinlogSystemVariables();
         this.tableFilter = tableFilter;
@@ -70,8 +57,9 @@ public class MySqlAntlrDdlParser extends AntlrDdlParser<MySqlLexer, MySqlParser>
     }
 
     @Override
-    protected ParseTree parseTree(MySqlParser parser) {
-        return parser.root();
+    protected ParseTree parseTree(MySQLParser parser) {
+        // to-do
+        return null;
     }
 
     @Override
@@ -80,18 +68,13 @@ public class MySqlAntlrDdlParser extends AntlrDdlParser<MySqlLexer, MySqlParser>
     }
 
     @Override
-    protected MySqlLexer createNewLexerInstance(CharStream charStreams) {
-        return new MySqlLexer(charStreams);
+    protected MySQLLexer createNewLexerInstance(CharStream charStreams) {
+        return new MySQLLexer(charStreams);
     }
 
     @Override
-    protected MySqlParser createNewParserInstance(CommonTokenStream commonTokenStream) {
-        return new MySqlParser(commonTokenStream);
-    }
-
-    @Override
-    protected SystemVariables createNewSystemVariablesInstance() {
-        return new BinlogSystemVariables();
+    protected MySQLParser createNewParserInstance(CommonTokenStream commonTokenStream) {
+        return new MySQLParser(commonTokenStream);
     }
 
     @Override
@@ -101,126 +84,13 @@ public class MySqlAntlrDdlParser extends AntlrDdlParser<MySqlLexer, MySqlParser>
 
     @Override
     protected DataTypeResolver initializeDataTypeResolver() {
-        DataTypeResolver.Builder dataTypeResolverBuilder = new DataTypeResolver.Builder();
+        // to-do
+       return null;
+    }
 
-        dataTypeResolverBuilder.registerDataTypes(MySqlParser.StringDataTypeContext.class.getCanonicalName(), Arrays.asList(
-                new DataTypeEntry(Types.CHAR, MySqlParser.CHAR),
-                new DataTypeEntry(Types.VARCHAR, MySqlParser.CHAR, MySqlParser.VARYING),
-                new DataTypeEntry(Types.VARCHAR, MySqlParser.VARCHAR),
-                new DataTypeEntry(Types.VARCHAR, MySqlParser.TINYTEXT),
-                new DataTypeEntry(Types.VARCHAR, MySqlParser.TEXT),
-                new DataTypeEntry(Types.VARCHAR, MySqlParser.MEDIUMTEXT),
-                new DataTypeEntry(Types.VARCHAR, MySqlParser.LONGTEXT),
-                new DataTypeEntry(Types.VARCHAR, MySqlParser.LONG),
-                new DataTypeEntry(Types.NCHAR, MySqlParser.NCHAR),
-                new DataTypeEntry(Types.NVARCHAR, MySqlParser.NCHAR, MySqlParser.VARYING),
-                new DataTypeEntry(Types.NVARCHAR, MySqlParser.NVARCHAR),
-                new DataTypeEntry(Types.CHAR, MySqlParser.CHAR, MySqlParser.BINARY),
-                new DataTypeEntry(Types.VARCHAR, MySqlParser.VARCHAR, MySqlParser.BINARY),
-                new DataTypeEntry(Types.VARCHAR, MySqlParser.TINYTEXT, MySqlParser.BINARY),
-                new DataTypeEntry(Types.VARCHAR, MySqlParser.TEXT, MySqlParser.BINARY),
-                new DataTypeEntry(Types.VARCHAR, MySqlParser.MEDIUMTEXT, MySqlParser.BINARY),
-                new DataTypeEntry(Types.VARCHAR, MySqlParser.LONGTEXT, MySqlParser.BINARY),
-                new DataTypeEntry(Types.NCHAR, MySqlParser.NCHAR, MySqlParser.BINARY),
-                new DataTypeEntry(Types.NVARCHAR, MySqlParser.NVARCHAR, MySqlParser.BINARY),
-                new DataTypeEntry(Types.CHAR, MySqlParser.CHARACTER),
-                new DataTypeEntry(Types.VARCHAR, MySqlParser.CHARACTER, MySqlParser.VARYING)));
-        dataTypeResolverBuilder.registerDataTypes(MySqlParser.NationalStringDataTypeContext.class.getCanonicalName(), Arrays.asList(
-                new DataTypeEntry(Types.NVARCHAR, MySqlParser.NATIONAL, MySqlParser.VARCHAR).setSuffixTokens(MySqlParser.BINARY),
-                new DataTypeEntry(Types.NCHAR, MySqlParser.NATIONAL, MySqlParser.CHARACTER).setSuffixTokens(MySqlParser.BINARY),
-                new DataTypeEntry(Types.NCHAR, MySqlParser.NATIONAL, MySqlParser.CHAR).setSuffixTokens(MySqlParser.BINARY),
-                new DataTypeEntry(Types.NVARCHAR, MySqlParser.NCHAR, MySqlParser.VARCHAR).setSuffixTokens(MySqlParser.BINARY)));
-        dataTypeResolverBuilder.registerDataTypes(MySqlParser.NationalVaryingStringDataTypeContext.class.getCanonicalName(), Arrays.asList(
-                new DataTypeEntry(Types.NVARCHAR, MySqlParser.NATIONAL, MySqlParser.CHAR, MySqlParser.VARYING),
-                new DataTypeEntry(Types.NVARCHAR, MySqlParser.NATIONAL, MySqlParser.CHARACTER, MySqlParser.VARYING)));
-        dataTypeResolverBuilder.registerDataTypes(MySqlParser.DimensionDataTypeContext.class.getCanonicalName(), Arrays.asList(
-                new DataTypeEntry(Types.SMALLINT, MySqlParser.TINYINT)
-                        .setSuffixTokens(MySqlParser.SIGNED, MySqlParser.UNSIGNED, MySqlParser.ZEROFILL),
-                new DataTypeEntry(Types.SMALLINT, MySqlParser.INT1)
-                        .setSuffixTokens(MySqlParser.SIGNED, MySqlParser.UNSIGNED, MySqlParser.ZEROFILL),
-                new DataTypeEntry(Types.SMALLINT, MySqlParser.SMALLINT)
-                        .setSuffixTokens(MySqlParser.SIGNED, MySqlParser.UNSIGNED, MySqlParser.ZEROFILL),
-                new DataTypeEntry(Types.SMALLINT, MySqlParser.INT2)
-                        .setSuffixTokens(MySqlParser.SIGNED, MySqlParser.UNSIGNED, MySqlParser.ZEROFILL),
-                new DataTypeEntry(Types.INTEGER, MySqlParser.MEDIUMINT)
-                        .setSuffixTokens(MySqlParser.SIGNED, MySqlParser.UNSIGNED, MySqlParser.ZEROFILL),
-                new DataTypeEntry(Types.INTEGER, MySqlParser.INT3)
-                        .setSuffixTokens(MySqlParser.SIGNED, MySqlParser.UNSIGNED, MySqlParser.ZEROFILL),
-                new DataTypeEntry(Types.INTEGER, MySqlParser.MIDDLEINT)
-                        .setSuffixTokens(MySqlParser.SIGNED, MySqlParser.UNSIGNED, MySqlParser.ZEROFILL),
-                new DataTypeEntry(Types.INTEGER, MySqlParser.INT)
-                        .setSuffixTokens(MySqlParser.SIGNED, MySqlParser.UNSIGNED, MySqlParser.ZEROFILL),
-                new DataTypeEntry(Types.INTEGER, MySqlParser.INTEGER)
-                        .setSuffixTokens(MySqlParser.SIGNED, MySqlParser.UNSIGNED, MySqlParser.ZEROFILL),
-                new DataTypeEntry(Types.INTEGER, MySqlParser.INT4)
-                        .setSuffixTokens(MySqlParser.SIGNED, MySqlParser.UNSIGNED, MySqlParser.ZEROFILL),
-                new DataTypeEntry(Types.BIGINT, MySqlParser.BIGINT)
-                        .setSuffixTokens(MySqlParser.SIGNED, MySqlParser.UNSIGNED, MySqlParser.ZEROFILL),
-                new DataTypeEntry(Types.BIGINT, MySqlParser.INT8)
-                        .setSuffixTokens(MySqlParser.SIGNED, MySqlParser.UNSIGNED, MySqlParser.ZEROFILL),
-                new DataTypeEntry(Types.REAL, MySqlParser.REAL)
-                        .setSuffixTokens(MySqlParser.SIGNED, MySqlParser.UNSIGNED, MySqlParser.ZEROFILL),
-                new DataTypeEntry(Types.DOUBLE, MySqlParser.DOUBLE)
-                        .setSuffixTokens(MySqlParser.PRECISION, MySqlParser.SIGNED, MySqlParser.UNSIGNED, MySqlParser.ZEROFILL),
-                new DataTypeEntry(Types.DOUBLE, MySqlParser.FLOAT8)
-                        .setSuffixTokens(MySqlParser.PRECISION, MySqlParser.SIGNED, MySqlParser.UNSIGNED, MySqlParser.ZEROFILL),
-                new DataTypeEntry(Types.FLOAT, MySqlParser.FLOAT)
-                        .setSuffixTokens(MySqlParser.SIGNED, MySqlParser.UNSIGNED, MySqlParser.ZEROFILL),
-                new DataTypeEntry(Types.FLOAT, MySqlParser.FLOAT4)
-                        .setSuffixTokens(MySqlParser.SIGNED, MySqlParser.UNSIGNED, MySqlParser.ZEROFILL),
-                new DataTypeEntry(Types.DECIMAL, MySqlParser.DECIMAL)
-                        .setSuffixTokens(MySqlParser.SIGNED, MySqlParser.UNSIGNED, MySqlParser.ZEROFILL)
-                        .setDefaultLengthScaleDimension(10, 0),
-                new DataTypeEntry(Types.DECIMAL, MySqlParser.DEC)
-                        .setSuffixTokens(MySqlParser.SIGNED, MySqlParser.UNSIGNED, MySqlParser.ZEROFILL)
-                        .setDefaultLengthScaleDimension(10, 0),
-                new DataTypeEntry(Types.DECIMAL, MySqlParser.FIXED)
-                        .setSuffixTokens(MySqlParser.SIGNED, MySqlParser.UNSIGNED, MySqlParser.ZEROFILL)
-                        .setDefaultLengthScaleDimension(10, 0),
-                new DataTypeEntry(Types.NUMERIC, MySqlParser.NUMERIC)
-                        .setSuffixTokens(MySqlParser.SIGNED, MySqlParser.UNSIGNED, MySqlParser.ZEROFILL)
-                        .setDefaultLengthScaleDimension(10, 0),
-                new DataTypeEntry(Types.BIT, MySqlParser.BIT)
-                        .setDefaultLengthDimension(1),
-                new DataTypeEntry(Types.OTHER, MySqlParser.VECTOR)
-                        .setDefaultLengthDimension(2048),
-                new DataTypeEntry(Types.TIME, MySqlParser.TIME),
-                new DataTypeEntry(Types.TIMESTAMP_WITH_TIMEZONE, MySqlParser.TIMESTAMP),
-                new DataTypeEntry(Types.TIMESTAMP, MySqlParser.DATETIME),
-                new DataTypeEntry(Types.BINARY, MySqlParser.BINARY),
-                new DataTypeEntry(Types.VARBINARY, MySqlParser.VARBINARY),
-                new DataTypeEntry(Types.BLOB, MySqlParser.BLOB),
-                new DataTypeEntry(Types.INTEGER, MySqlParser.YEAR)));
-        dataTypeResolverBuilder.registerDataTypes(MySqlParser.SimpleDataTypeContext.class.getCanonicalName(), Arrays.asList(
-                new DataTypeEntry(Types.DATE, MySqlParser.DATE),
-                new DataTypeEntry(Types.BLOB, MySqlParser.TINYBLOB),
-                new DataTypeEntry(Types.BLOB, MySqlParser.MEDIUMBLOB),
-                new DataTypeEntry(Types.BLOB, MySqlParser.LONGBLOB),
-                new DataTypeEntry(Types.BOOLEAN, MySqlParser.BOOL),
-                new DataTypeEntry(Types.BOOLEAN, MySqlParser.BOOLEAN),
-                new DataTypeEntry(Types.BIGINT, MySqlParser.SERIAL)));
-        dataTypeResolverBuilder.registerDataTypes(MySqlParser.CollectionDataTypeContext.class.getCanonicalName(), Arrays.asList(
-                new DataTypeEntry(Types.CHAR, MySqlParser.ENUM).setSuffixTokens(MySqlParser.BINARY),
-                new DataTypeEntry(Types.CHAR, MySqlParser.SET).setSuffixTokens(MySqlParser.BINARY)));
-        dataTypeResolverBuilder.registerDataTypes(MySqlParser.SpatialDataTypeContext.class.getCanonicalName(), Arrays.asList(
-                new DataTypeEntry(Types.OTHER, MySqlParser.GEOMETRYCOLLECTION),
-                new DataTypeEntry(Types.OTHER, MySqlParser.GEOMCOLLECTION),
-                new DataTypeEntry(Types.OTHER, MySqlParser.LINESTRING),
-                new DataTypeEntry(Types.OTHER, MySqlParser.MULTILINESTRING),
-                new DataTypeEntry(Types.OTHER, MySqlParser.MULTIPOINT),
-                new DataTypeEntry(Types.OTHER, MySqlParser.MULTIPOLYGON),
-                new DataTypeEntry(Types.OTHER, MySqlParser.POINT),
-                new DataTypeEntry(Types.OTHER, MySqlParser.POLYGON),
-                new DataTypeEntry(Types.OTHER, MySqlParser.JSON),
-                new DataTypeEntry(Types.OTHER, MySqlParser.GEOMETRY)));
-        dataTypeResolverBuilder.registerDataTypes(MySqlParser.LongVarbinaryDataTypeContext.class.getCanonicalName(), Arrays.asList(
-                new DataTypeEntry(Types.BLOB, MySqlParser.LONG)
-                        .setSuffixTokens(MySqlParser.VARBINARY)));
-        dataTypeResolverBuilder.registerDataTypes(MySqlParser.LongVarcharDataTypeContext.class.getCanonicalName(), Arrays.asList(
-                new DataTypeEntry(Types.VARCHAR, MySqlParser.LONG)
-                        .setSuffixTokens(MySqlParser.VARCHAR)));
-
-        return dataTypeResolverBuilder.build();
+    @Override
+    protected SystemVariables createNewSystemVariablesInstance() {
+        return null;
     }
 
     /**
@@ -233,24 +103,24 @@ public class MySqlAntlrDdlParser extends AntlrDdlParser<MySqlLexer, MySqlParser>
     }
 
     /**
-     * Parse a name from {@link MySqlParser.UidContext}.
+     * Parse a name from {@link MySQLParser.IdentifierKeywordContext}.
      *
-     * @param uidContext uid context
+     * @param identifierKeywordContext identifier keyword context.
      * @return name without quotes.
      */
-    public String parseName(MySqlParser.UidContext uidContext) {
-        return withoutQuotes(uidContext);
+    public String parseName(MySQLParser.IdentifierKeywordContext identifierKeywordContext) {
+        return withoutQuotes(identifierKeywordContext.getText());
     }
 
     /**
-     * Parse qualified table identification from {@link MySqlParser.FullIdContext}.
-     * {@link MySqlAntlrDdlParser#currentSchema()} will be used if definition of schema name is not part of the context.
+     * Parse qualified table identification from {@link MySQLParser.SimpleIdentifierContext
+     * {@link io.debezium.connector.mysql.antlr.legacy.MySqlAntlrDdlParser#currentSchema()} will be used if definition of schema name is not part of the context.
      *
      * @param fullIdContext full id context.
      * @return qualified {@link TableId}.
      */
-    public TableId parseQualifiedTableId(MySqlParser.FullIdContext fullIdContext) {
-        final char[] fullTableName = fullIdContext.getText().toCharArray();
+    public TableId parseQualifiedTableId(MySQLParser.SimpleIdentifierContext simpleIdentifierContext) {
+        final char[] fullTableName = simpleIdentifierContext.getText().toCharArray();
         StringBuilder component = new StringBuilder();
         String dbName = null;
         String tableName = null;
@@ -294,39 +164,14 @@ public class MySqlAntlrDdlParser extends AntlrDdlParser<MySqlLexer, MySqlParser>
     }
 
     /**
-     * Parse column names for primary index from {@link MySqlParser.IndexColumnNamesContext}. This method will update
+     * Parse column names for primary index from {@link MySQLParser.IndexNameContext}. This method will update
      * column to be not optional and set primary key column names to table.
      *
-     * @param indexColumnNamesContext primary key index column names context.
+     * @param indexNameContext primary key index column names context.
      * @param tableEditor editor for table where primary key index is parsed.
      */
-    public void parsePrimaryIndexColumnNames(MySqlParser.IndexColumnNamesContext indexColumnNamesContext, TableEditor tableEditor) {
-        List<String> pkColumnNames = indexColumnNamesContext.indexColumnName().stream()
-                .map(indexColumnNameContext -> {
-                    // MySQL does not allow a primary key to have nullable columns, so let's make sure we model that correctly ...
-                    String columnName;
-                    if (indexColumnNameContext.uid() != null) {
-                        columnName = parseName(indexColumnNameContext.uid());
-                    }
-                    else if (indexColumnNameContext.STRING_LITERAL() != null) {
-                        columnName = withoutQuotes(indexColumnNameContext.STRING_LITERAL().getText());
-                    }
-                    else {
-                        columnName = indexColumnNameContext.expression().getText();
-                    }
-                    Column column = tableEditor.columnWithName(columnName);
-                    if (column != null && column.isOptional()) {
-                        final ColumnEditor ce = column.edit().optional(false);
-                        if (ce.hasDefaultValue() && !ce.defaultValueExpression().isPresent()) {
-                            ce.unsetDefaultValueExpression();
-                        }
-                        tableEditor.addColumn(ce.create());
-                    }
-                    return column != null ? column.name() : columnName;
-                })
-                .collect(Collectors.toList());
+    public void parsePrimaryIndexColumnNames(MySQLParser.IndexNameContext indexNameContext, TableEditor tableEditor) {
 
-        tableEditor.setPrimaryKeyNames(pkColumnNames);
     }
 
     /**
@@ -421,8 +266,8 @@ public class MySqlAntlrDdlParser extends AntlrDdlParser<MySqlLexer, MySqlParser>
      */
     public static List<String> extractEnumAndSetOptions(List<String> enumValues) {
         return enumValues.stream()
-                .map(MySqlAntlrDdlParser::withoutQuotes)
-                .map(MySqlAntlrDdlParser::escapeOption)
+                .map(io.debezium.connector.mysql.antlr.legacy.MySqlAntlrDdlParser::withoutQuotes)
+                .map(io.debezium.connector.mysql.antlr.legacy.MySqlAntlrDdlParser::escapeOption)
                 .collect(Collectors.toList());
     }
 
@@ -433,7 +278,7 @@ public class MySqlAntlrDdlParser extends AntlrDdlParser<MySqlLexer, MySqlParser>
         return option.replaceAll(",", "\\\\,").replaceAll("\\\\'", "'").replace("''", "'");
     }
 
-    public TableFilter getTableFilter() {
+    public Tables.TableFilter getTableFilter() {
         return tableFilter;
     }
 
@@ -444,7 +289,7 @@ public class MySqlAntlrDdlParser extends AntlrDdlParser<MySqlLexer, MySqlParser>
      * @param collationNode
      * @return character set
      */
-    public String extractCharset(CharsetNameContext charsetNode, CollationNameContext collationNode) {
+    public String extractCharset(MySQLParser.CharsetNameContext charsetNode, MySQLParser.CollationNameContext collationNode) {
         String charsetName = null;
         if (charsetNode != null && charsetNode.getText() != null) {
             charsetName = withoutQuotes(charsetNode.getText());
@@ -468,8 +313,8 @@ public class MySqlAntlrDdlParser extends AntlrDdlParser<MySqlLexer, MySqlParser>
      * @param previousId the previous name of the view if it was renamed, or null if it was not renamed
      * @param ctx        the start of the statement; may not be null
      */
-    public void signalAlterTable(TableId id, TableId previousId, RenameTableClauseContext ctx) {
-        final RenameTableContext parent = (RenameTableContext) ctx.getParent();
+    public void signalAlterTable(TableId id, TableId previousId, MySQLParser.RenameTableStatementContext ctx) {
+        final MySQLParser.RenameTableStatementContext parent = (MySQLParser.RenameTableStatementContext) ctx.getParent();
         Interval interval = new Interval(ctx.getParent().start.getStartIndex(),
                 parent.renameTableClause().get(0).start.getStartIndex() - 1);
         String prefix = ctx.getParent().start.getInputStream().getText(interval);

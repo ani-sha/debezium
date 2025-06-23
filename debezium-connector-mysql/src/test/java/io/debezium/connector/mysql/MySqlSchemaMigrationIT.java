@@ -6,7 +6,7 @@
 package io.debezium.connector.mysql;
 
 import io.debezium.connector.binlog.BinlogSchemaMigrationIT;
-import io.debezium.connector.mysql.antlr.listener.RenameTableParserListener;
+import io.debezium.connector.mysql.antlr.legacy.listener.RenameTableParserListener;
 
 /**
  * @author Jiri Pechanec

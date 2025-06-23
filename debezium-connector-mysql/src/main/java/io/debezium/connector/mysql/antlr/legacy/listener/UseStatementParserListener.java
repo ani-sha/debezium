@@ -3,22 +3,23 @@
  *
  * Licensed under the Apache Software License version 2.0, available at http://www.apache.org/licenses/LICENSE-2.0
  */
-package io.debezium.connector.mysql.antlr.listener;
+
+package io.debezium.connector.mysql.antlr.legacy.listener;
 
 import io.debezium.connector.binlog.jdbc.BinlogSystemVariables;
-import io.debezium.connector.mysql.antlr.MySqlAntlrDdlParser;
+import io.debezium.connector.mysql.antlr.legacy.MySqlAntlrDdlParser;
 import io.debezium.ddl.parser.mysql.generated.MySqlParser;
-import io.debezium.ddl.parser.mysql2.generated.MySQLParserBaseListener;
+import io.debezium.ddl.parser.mysql.generated.MySqlParserBaseListener;
 
 /**
  * Parser listener that is parsing MySQL USE statements that changes
  * current database/schema on which all changes are applied.
  *
- * @author Anisha Mohanty
+ * @author Roman Kuchár <kucharrom@gmail.com>.
  */
-public class UseStatementParserListener extends MySQLParserBaseListener {
+public class UseStatementParserListener extends MySqlParserBaseListener {
 
-    private MySqlAntlrDdlParser parser;
+    private final MySqlAntlrDdlParser parser;
 
     public UseStatementParserListener(MySqlAntlrDdlParser parser) {
         this.parser = parser;
@@ -39,6 +40,4 @@ public class UseStatementParserListener extends MySQLParserBaseListener {
         parser.signalUseDatabase(ctx);
         super.enterUseStatement(ctx);
     }
-
-
 }
